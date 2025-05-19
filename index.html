@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disponibilità Tasso</title>
+  <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      background: linear-gradient(to right, #111118, #1a1a24);
+      backdrop-filter: blur(10px);
+      color: #e5e5e5;
+      position: relative;
+    }
+
+    .logo {
+      position: absolute;
+      top: 0px;
+      left: 10px;
+      width: 350px;
+      height: auto;
+    }
+
+    .calendar {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+      margin-top: 60px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .month {
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: #f5f5f5;
+      text-transform: capitalize;
+    }
+
+    .nav button {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: #999;
+      cursor: pointer;
+      padding: 5px;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+    .nav button:hover {
+      transform: scale(1.2);
+      color: #fff;
+    }
+
+    .nav button svg {
+      width: 20px;
+      height: 20px;
+      fill: #999;
+      transition: fill 0.3s ease;
+    }
+
+    .nav button:hover svg {
+      fill: #fff;
+    }
+
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+      transition: opacity 1.2s ease, transform 1.2s ease;
+    }
+
+    .days.fade-out {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .days.fade-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .day-name, .day {
+      text-align: center;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background 0.3s ease, color 0.3s ease;
+      color: #ccc;
+    }
+
+    .day-name {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #888;
+    }
+
+    .day:hover {
+      background: rgba(255, 255, 255, 0.07);
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .today {
+      background-color: rgba(100, 149, 237, 0.3);
+      color: #fff;
+    }
+
+    .disabled-day {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    @media (max-width: 480px) {
+      .calendar {
+        padding: 10px;
+      }
+      .month {
+        font-size: 1.2rem;
+      }
+      .day-name, .day {
+        padding: 6px;
+        font-size: 0.8rem;
+      }
+      .logo {
+        width: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calendar">
+   <img src="tasso.PNG" alt="Tasso Logo" class="logo">
+    <div class="header">
+      <div class="nav">
+        <button onclick="changeMonth(-1)">
+          <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+      </div>
+      <div class="month" id="monthDisplay"></div>
+      <div class="nav">
+        <button onclick="changeMonth(1)">
+          <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="days" id="dayNames"></div>
+    <div class="days fade-in" id="calendarDays"></div>
+  </div>
+
+  <script>
+    const monthDisplay = document.getElementById("monthDisplay");
+    const calendarDays = document.getElementById("calendarDays");
+    const dayNames = document.getElementById("dayNames");
+
+    const weekdays = ["L", "M", "M", "G", "V", "S", "D"];
+
+    let currentDate = new Date();
+
+    function generateDayNames() {
+      weekdays.forEach(day => {
+        const div = document.createElement("div");
+        div.classList.add("day-name");
+        div.innerText = day;
+        dayNames.appendChild(div);
+      });
+    }
+
+    function isDisabledDay(date) {
+      const disabledDates = [
+        '2025-05-16', '2025-05-17', '2025-05-22', '2025-05-24', '2025-05-31',
+        '2025-06-06', '2025-06-20',
+        '2025-07-20',
+        '2025-09-14', '2025-09-19',
+        '2025-10-18'
+      ];
+
+      const enabledDates = [
+        '2025-08-09'
+      ];
+
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const formatted = `${year}-${String(month + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+      if (enabledDates.includes(formatted)) return false;
+      if (disabledDates.includes(formatted)) return true;
+
+      if (date.getDay() === 6 && [5, 6, 7, 8].includes(month)) return true;
+
+      return false;
+    }
+
+    function renderCalendar() {
+      calendarDays.classList.remove("fade-in");
+      calendarDays.classList.add("fade-out");
+
+      setTimeout(() => {
+        calendarDays.innerHTML = "";
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const today = new Date();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+
+        monthDisplay.innerText = firstDay.toLocaleString("it-IT", { month: "long", year: "numeric" });
+
+        const startDay = (firstDay.getDay() + 6) % 7;
+
+        for (let i = 0; i < startDay; i++) {
+          const empty = document.createElement("div");
+          calendarDays.appendChild(empty);
+        }
+
+        for (let i = 1; i <= lastDay.getDate(); i++) {
+          const date = new Date(year, month, i);
+          const day = document.createElement("div");
+          day.classList.add("day");
+          day.innerText = i;
+
+          if (
+            i === today.getDate() &&
+            month === today.getMonth() &&
+            year === today.getFullYear()
+          ) {
+            day.classList.add("today");
+          }
+
+          if (isDisabledDay(date)) {
+            day.classList.add("disabled-day");
+          }
+
+          calendarDays.appendChild(day);
+        }
+
+        calendarDays.classList.remove("fade-out");
+        calendarDays.classList.add("fade-in");
+      }, 300);
+    }
+
+    function changeMonth(direction) {
+      currentDate.setMonth(currentDate.getMonth() + direction);
+      renderCalendar();
+    }
+
+    generateDayNames();
+    renderCalendar();
+  </script>
+</body>
+</html>
